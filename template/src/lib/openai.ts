@@ -5,14 +5,16 @@
  * If an API key is missing (i.e. candidate doesn't have one), the helper falls back to
  * deterministic stub functions so unit tests still pass offline.
  */
+/* eslint-disable import/no-unresolved */
 
 // You MAY install the official package locally if you have a key:
 //   pnpm add -D openai
 // The template keeps it optional so it still works without.
 
-let OpenAI: any
+let OpenAI: typeof import("openai")["default"] | undefined
 try {
-  // eslint-disable-next-line global-require, import/extensions, import/no-extraneous-dependencies
+  // eslint-disable-next-line global-require, import/extensions, import/no-extraneous-dependencies, import/no-unresolved
+  // @ts-expect-error – dynamic import to avoid requiring the package if not installed
   OpenAI = (await import('openai')).default
 } catch {
   // no dependency installed – we will use stubs
@@ -36,11 +38,11 @@ export async function embed(text: string): Promise<number[]> {
       model: 'text-embedding-3-small',
       input: text,
     })
-    // @ts-ignore – typings vary by version
+    // @ts-expect-error – typings vary by version
     return res.data[0].embedding as number[]
   }
   // Fallback: convert chars to small numeric vector (deterministic)
   return Array.from({ length: 8 }, (_, i) =>
     ((text.charCodeAt(i % text.length) || 0) % 100) / 100
   )
-} 
+}
